@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"live-chat-kafka/cmd/app"
+	"live-chat-kafka/cmd/controller/app"
 	"log/slog"
 	"os"
 	"os/signal"

@@ -8,20 +8,20 @@ TARGET_VERSION=$(APP_VERSION).$(BUILD_NUM)
 TARGET_DIR=bin
 OUTPUT=$(PROJECT_PATH)/$(TARGET_DIR)/$(MODULE_NAME)
 
-MAIN=cmd/main.go
+MAIN=cmd/controller/main.go
 
 LDFLAGS=-X main.BUILD_TIME=`date -u '+%Y-%m-%d_%H:%M:%S'`
 LDFLAGS+=-X main.APP_VERSION=$(TARGET_VERSION)
 LDFLAGS+=-X main.GIT_HASH=`git rev-parse HEAD`
 LDFLAGS+=-s -w
 
-all: config build
+api: config api-build
 
 config:
 	@if [ ! -d $(TARGET_DIR) ]; then mkdir $(TARGET_DIR); fi
 
-build:
-	GOOS=linux go build -ldflags "$(LDFLAGS)" -o $(OUTPUT) $(PROJECT_PATH)/$(MAIN)
+api-build:
+	GOOS=darwin GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o $(OUTPUT) $(PROJECT_PATH)/$(MAIN)
 	cp $(OUTPUT) ./live-chat-kafka
 
 target-version:

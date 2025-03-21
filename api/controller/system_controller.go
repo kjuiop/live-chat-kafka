@@ -38,6 +38,6 @@ func (s *SystemController) failResponse(c *gin.Context, statusCode, errorCode in
 }
 
 func (s *SystemController) GetHealth(c *gin.Context) {
-	s.successResponse(c, http.StatusOK, nil)
+	c.String(http.StatusOK, "ok")
 	return
 }

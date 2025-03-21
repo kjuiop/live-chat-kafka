@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"live-chat-kafka/api/form"
+	"live-chat-kafka/internal/domain/system"
 	"live-chat-kafka/internal/models"
 	"net/http"
 )
 
 type SystemController struct {
+	SystemUseCase system.UseCase
 }
 
-func NewSystemController() *SystemController {
-	return &SystemController{}
+func NewSystemController(useCase system.UseCase) *SystemController {
+	return &SystemController{
+		SystemUseCase: useCase,
+	}
 }
 
 func (s *SystemController) successResponse(c *gin.Context, statusCode int, data interface{}) {
@@ -39,5 +43,20 @@ func (s *SystemController) failResponse(c *gin.Context, statusCode, errorCode in
 
 func (s *SystemController) GetHealth(c *gin.Context) {
 	c.String(http.StatusOK, "ok")
-	return
+}
+
+func (s *SystemController) GetServerList(c *gin.Context) {
+
+	list, err := s.SystemUseCase.GetServerList()
+	if err != nil {
+		s.failResponse(c, http.StatusInternalServerError, models.ErrInternalServerError, fmt.Errorf("get server list occur err : %w", err))
+		return
+	}
+
+	if len(list) == 0 {
+		s.successResponse(c, http.StatusOK, nil)
+		return
+	}
+
+	s.successResponse(c, http.StatusOK, list)
 }

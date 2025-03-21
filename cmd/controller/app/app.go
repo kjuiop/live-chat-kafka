@@ -6,6 +6,7 @@ import (
 	"live-chat-kafka/api/route"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/database"
+	"live-chat-kafka/internal/domain/system"
 	sps "live-chat-kafka/internal/domain/system/pubsub"
 	sr "live-chat-kafka/internal/domain/system/repository"
 	su "live-chat-kafka/internal/domain/system/usecase"
@@ -13,6 +14,7 @@ import (
 	"live-chat-kafka/internal/server"
 	"live-chat-kafka/logger"
 	"log"
+	"log/slog"
 	"sync"
 )
 
@@ -21,6 +23,7 @@ type App struct {
 	srv server.Client
 	mq  message_queue.Client
 	db  database.Client
+	su  system.UseCase
 }
 
 func NewApplication(ctx context.Context) *App {
@@ -47,10 +50,10 @@ func NewApplication(ctx context.Context) *App {
 	srv := server.NewGinServer(cfg)
 
 	app := &App{
-		cfg,
-		srv,
-		mq,
-		db,
+		cfg: cfg,
+		srv: srv,
+		mq:  mq,
+		db:  db,
 	}
 	app.setupRouter()
 
@@ -81,4 +84,30 @@ func (a *App) setupRouter() {
 		SystemController: systemController,
 	}
 	router.APISetup()
+
+	a.su = systemUseCase
+}
+
+func (a *App) LoopServerInfo(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Debug("close Loop Sub Kafka goroutine")
+			return
+		default:
+			event, err := a.su.LoopSubKafka(a.cfg.Kafka.ConsumerTimeout)
+			if err != nil {
+				slog.Error("received event error", "error", err)
+				continue
+			}
+
+			if event == nil {
+				continue
+			}
+
+			slog.Debug("received event", "event", string(event.Value))
+		}
+	}
 }

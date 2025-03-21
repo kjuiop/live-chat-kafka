@@ -1,10 +1,14 @@
 package usecase
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"live-chat-kafka/internal/domain/system"
+	"live-chat-kafka/internal/message_queue/types"
 	"live-chat-kafka/internal/models"
 	"log"
+	"log/slog"
 )
 
 type systemUseCase struct {
@@ -70,5 +74,50 @@ func (s *systemUseCase) setServerInfo() error {
 		s.avgServerList[server.IP] = true
 	}
 
+	return nil
+}
+
+func (s *systemUseCase) LoopSubKafka(timeoutMs int) (*types.Message, error) {
+
+	ev := s.systemPubSub.Poll(timeoutMs) // Polling 1000ms 동안 이벤트 대기
+
+	if ev == nil {
+		return nil, nil
+	}
+
+	if ev.IsError() {
+		errorEvent := ev.(*types.Error)
+		slog.Error("Failed to Polling event", "error", errorEvent.Error)
+		return nil, fmt.Errorf("consumer event error, err : %v", errorEvent.Error)
+	}
+
+	if !ev.IsMessage() {
+		return nil, fmt.Errorf("is not expected message, event : %v", ev)
+	}
+
+	message := ev.(*types.Message)
+
+	var decoder system.ServerInfo
+	if err := json.Unmarshal(message.Value, &decoder); err != nil {
+		slog.Error("failed to decode event", "event_value", string(message.Value))
+		return nil, err
+	}
+
+	if err := s.SetChatServerInfo(decoder.IP, decoder.Available); err != nil {
+		slog.Error("failed update server info", "server_ip", decoder.IP, "available", decoder.Available)
+		return nil, err
+	}
+
+	s.avgServerList[decoder.IP] = decoder.Available
+
+	slog.Debug("update chat server info", "server_ip", decoder.IP, "available", decoder.Available, "avg_server_list", s.avgServerList)
+
+	return &types.Message{Value: message.Value}, nil
+}
+
+func (s *systemUseCase) SetChatServerInfo(ip string, available bool) error {
+	if err := s.systemRepo.SetChatServerInfo(ip, available); err != nil {
+		return err
+	}
 	return nil
 }

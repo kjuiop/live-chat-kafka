@@ -1,5 +1,7 @@
 package system
 
+import "live-chat-kafka/internal/message_queue/types"
+
 type ServerInfo struct {
 	IP        string `json:"ip"`
 	Available bool   `json:"available"`
@@ -21,11 +23,16 @@ func (s *ServerInfo) ConvertRedisData() map[string]interface{} {
 
 type UseCase interface {
 	GetServerList() ([]ServerInfo, error)
+	LoopSubKafka(timeoutMs int) (*types.Message, error)
 }
 
 type Repository interface {
 	GetAvailableServerList() ([]ServerInfo, error)
+	SetChatServerInfo(ip string, available bool) error
 }
 
 type PubSub interface {
+	RegisterSubTopic(topic string) error
+	Poll(timeoutMs int) types.Event
+	PublishEvent(topic string, data []byte) (types.Event, error)
 }

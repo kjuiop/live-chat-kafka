@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"live-chat-kafka/api/middleware"
 	"live-chat-kafka/config"
 	"log"
 	"log/slog"
@@ -26,6 +27,10 @@ func NewGinServer(cfg *config.EnvConfig) Client {
 	if err := router.SetTrustedProxies(strings.Split(serverCfg.TrustedProxies, ",")); err != nil {
 		log.Fatalf("failed set trust proxies, err : %v", err)
 	}
+
+	router.Use(middleware.LoggingMiddleware)
+	router.Use(middleware.RecoveryErrorReport())
+	router.Use(middleware.SetCorsPolicy())
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", serverCfg.Port),

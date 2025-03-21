@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"live-chat-kafka/api/controller"
+	"live-chat-kafka/api/route"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/server"
 	"live-chat-kafka/logger"
@@ -27,10 +29,13 @@ func NewApplication(ctx context.Context) *App {
 
 	srv := server.NewGinServer(cfg)
 
-	return &App{
+	app := &App{
 		cfg,
 		srv,
 	}
+	app.setupRouter()
+
+	return app
 }
 
 func (a *App) Start(wg *sync.WaitGroup) {
@@ -40,4 +45,14 @@ func (a *App) Start(wg *sync.WaitGroup) {
 
 func (a *App) Stop(ctx context.Context) {
 	a.srv.Shutdown(ctx)
+}
+
+func (a *App) setupRouter() {
+
+	systemController := controller.NewSystemController()
+
+	router := route.RouterConfig{
+		SystemController: systemController,
+	}
+	router.APISetup()
 }

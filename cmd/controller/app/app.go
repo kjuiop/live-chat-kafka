@@ -52,6 +52,7 @@ func (a *App) setupRouter() {
 	systemController := controller.NewSystemController()
 
 	router := route.RouterConfig{
+		Engine:           a.srv.GetEngine(),
 		SystemController: systemController,
 	}
 	router.APISetup()

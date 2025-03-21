@@ -25,6 +25,9 @@ func main() {
 	wg.Add(1)
 	go a.Start(&wg)
 
+	wg.Add(1)
+	go a.LoopServerInfo(ctx, &wg)
+
 	slog.Debug("live chat app start", "git_hash", GIT_HASH, "build_time", BUILD_TIME, "app_version", APP_VERSION)
 
 	<-exitSignal()

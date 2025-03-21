@@ -24,6 +24,7 @@ func (s *ServerInfo) ConvertRedisData() map[string]interface{} {
 type UseCase interface {
 	GetServerList() ([]ServerInfo, error)
 	LoopSubKafka(timeoutMs int) (*types.Message, error)
+	RegisterSubTopic(topic string) error
 }
 
 type Repository interface {

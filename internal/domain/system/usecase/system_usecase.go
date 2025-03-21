@@ -121,3 +121,7 @@ func (s *systemUseCase) SetChatServerInfo(ip string, available bool) error {
 	}
 	return nil
 }
+
+func (s *systemUseCase) RegisterSubTopic(topic string) error {
+	return s.systemPubSub.RegisterSubTopic(topic)
+}

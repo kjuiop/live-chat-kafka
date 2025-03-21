@@ -56,6 +56,9 @@ func NewApplication(ctx context.Context) *App {
 		db:  db,
 	}
 	app.setupRouter()
+	if err := app.initProcess(); err != nil {
+		log.Fatalf("failed initialized process, err : %v", err)
+	}
 
 	return app
 }
@@ -110,4 +113,13 @@ func (a *App) LoopServerInfo(ctx context.Context, wg *sync.WaitGroup) {
 			slog.Debug("received event", "event", string(event.Value))
 		}
 	}
+}
+
+func (a *App) initProcess() error {
+
+	if err := a.su.RegisterSubTopic("chat"); err != nil {
+		return err
+	}
+
+	return nil
 }

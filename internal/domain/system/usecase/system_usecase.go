@@ -25,7 +25,7 @@ func NewSystemUseCase(systemRepo system.Repository, systemPubSub system.PubSub) 
 		avgServerList: make(map[string]bool),
 	}
 
-	if err := s.setServerInfo(); err != nil {
+	if err := s.getServerInfoForMemory(); err != nil {
 		log.Fatalf("failed register server info, err : %v", err)
 	}
 
@@ -57,7 +57,7 @@ func (s *systemUseCase) GetAvailableServerList() ([]system.ServerInfo, error) {
 	return s.systemRepo.GetAvailableServerList()
 }
 
-func (s *systemUseCase) setServerInfo() error {
+func (s *systemUseCase) getServerInfoForMemory() error {
 
 	serverList, err := s.GetAvailableServerList()
 	if errors.Is(err, models.GetCustomErr(models.ErrNotFoundServerInfo)) {
@@ -124,4 +124,21 @@ func (s *systemUseCase) SetChatServerInfo(ip string, available bool) error {
 
 func (s *systemUseCase) RegisterSubTopic(topic string) error {
 	return s.systemPubSub.RegisterSubTopic(topic)
+}
+
+func (s *systemUseCase) PublishServerStatusEvent(addr string, status bool) {
+
+	serverInfo := system.ServerInfo{IP: addr, Available: status}
+
+	bytes, err := json.Marshal(serverInfo)
+	if err != nil {
+		log.Fatalf("failed register server info, address : %s, err : %v", addr, err)
+	}
+
+	event, err := s.systemPubSub.PublishEvent("chat", bytes)
+	if err != nil {
+		log.Fatalf("failed publish server info, addr : %s, err : %v", addr, err.Error())
+	}
+
+	slog.Debug("success server info publish event, %v", event)
 }

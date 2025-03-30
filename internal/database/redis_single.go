@@ -45,8 +45,8 @@ func (r *redisClient) GetAvailableServerList() (map[string]string, error) {
 	return result, nil
 }
 
-func (r *redisClient) SaveChatServerInfo(key string, data map[string]interface{}) error {
-	if err := r.client.HSet(context.TODO(), LiveChatServerInfo, key, data).Err(); err != nil {
+func (r *redisClient) SaveChatServerInfo(ip string, available bool) error {
+	if err := r.client.HSet(context.TODO(), LiveChatServerInfo, ip, available).Err(); err != nil {
 		return err
 	}
 	return nil

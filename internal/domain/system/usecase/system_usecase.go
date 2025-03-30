@@ -26,7 +26,7 @@ func NewSystemUseCase(systemRepo system.Repository, systemPubSub system.PubSub) 
 	}
 
 	if err := s.getServerInfoForMemory(); err != nil {
-		log.Fatalf("failed register server info, err : %v", err)
+		log.Fatalf("failed get server info, err : %v", err)
 	}
 
 	return s

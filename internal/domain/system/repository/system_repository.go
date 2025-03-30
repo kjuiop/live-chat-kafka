@@ -43,7 +43,8 @@ func (s *systemRepository) GetAvailableServerList() ([]system.ServerInfo, error)
 
 func (s *systemRepository) SetChatServerInfo(ip string, available bool) error {
 
-	if err := s.db.SaveChatServerInfo(ip, available); err != nil {
+	data := system.NewServerInfo(ip, available)
+	if err := s.db.SaveChatServerInfo(data.IP, data.ConvertRedisData()); err != nil {
 		return err
 	}
 

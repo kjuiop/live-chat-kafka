@@ -25,6 +25,8 @@ type UseCase interface {
 	GetServerList() ([]ServerInfo, error)
 	LoopSubKafka(timeoutMs int) (*types.Message, error)
 	RegisterSubTopic(topic string) error
+	SetChatServerInfo(ip string, available bool) error
+	PublishServerStatusEvent(addr string, status bool)
 }
 
 type Repository interface {

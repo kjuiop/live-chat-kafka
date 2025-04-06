@@ -30,6 +30,23 @@ func NewKafkaConsumerClient(cfg config.Kafka) (Client, error) {
 	}, nil
 }
 
+func NewKafkaProducerClient(cfg config.Kafka) (Client, error) {
+
+	producer, err := kafka.NewProducer(&kafka.ConfigMap{
+		"bootstrap.servers": cfg.URL,
+		"client.id":         cfg.ClientID,
+		"acks":              "all",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &kafkaClient{
+		cfg:      cfg,
+		producer: producer,
+	}, nil
+}
+
 func (k *kafkaClient) Subscribe(topic string) error {
 	if err := k.consumer.Subscribe(topic, nil); err != nil {
 		return err

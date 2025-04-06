@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"live-chat-kafka/api/form"
+	"live-chat-kafka/api/presenter"
 	"live-chat-kafka/internal/domain/system"
 	"live-chat-kafka/internal/models"
 	"net/http"
@@ -20,7 +20,7 @@ func NewSystemController(useCase system.UseCase) *SystemController {
 }
 
 func (s *SystemController) successResponse(c *gin.Context, statusCode int, data interface{}) {
-	c.JSON(statusCode, form.ApiResponse{
+	c.JSON(statusCode, presenter.ApiResponse{
 		ErrorCode: models.NoError,
 		Message:   models.GetCustomMessage(models.NoError),
 		Result:    data,
@@ -35,7 +35,7 @@ func (s *SystemController) failResponse(c *gin.Context, statusCode, errorCode in
 		Type: gin.ErrorTypePrivate,
 	})
 
-	c.JSON(statusCode, form.ApiResponse{
+	c.JSON(statusCode, presenter.ApiResponse{
 		ErrorCode: errorCode,
 		Message:   models.GetCustomMessage(errorCode),
 	})

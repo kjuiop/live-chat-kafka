@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"live-chat-kafka/config"
@@ -46,7 +47,11 @@ func (r *redisClient) GetAvailableServerList() (map[string]string, error) {
 }
 
 func (r *redisClient) SaveChatServerInfo(key string, data map[string]interface{}) error {
-	if err := r.client.HSet(context.TODO(), LiveChatServerInfo, key, data).Err(); err != nil {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	if err := r.client.HSet(context.TODO(), LiveChatServerInfo, key, jsonData).Err(); err != nil {
 		return err
 	}
 	return nil

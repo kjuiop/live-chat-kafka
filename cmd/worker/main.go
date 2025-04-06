@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"live-chat-kafka/cmd/controller/app"
+	"live-chat-kafka/cmd/worker/app"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -25,16 +25,13 @@ func main() {
 	wg.Add(1)
 	go a.Start(&wg)
 
-	wg.Add(1)
-	go a.LoopServerInfo(ctx, &wg)
-
-	slog.Debug("live chat api app start", "git_hash", GIT_HASH, "build_time", BUILD_TIME, "app_version", APP_VERSION)
+	slog.Debug("live chat worker app start", "git_hash", GIT_HASH, "build_time", BUILD_TIME, "app_version", APP_VERSION)
 
 	<-exitSignal()
 	a.Stop(ctx)
 	cancel()
 	wg.Wait()
-	slog.Debug("live chat api app gracefully stopped")
+	slog.Debug("live chat worker app gracefully stopped")
 }
 
 func exitSignal() <-chan os.Signal {

@@ -17,4 +17,5 @@ func (r *RouterConfig) APISetup() {
 
 func (r *RouterConfig) SetupSystemRouter(api *gin.RouterGroup) {
 	api.GET("/system/health-check", r.SystemController.GetHealth)
+	api.GET("/system/server-list", r.SystemController.GetServerList)
 }

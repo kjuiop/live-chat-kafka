@@ -25,6 +25,7 @@ var errorList = map[int]CustomErr{
 }
 
 const (
+	InternalError      = "internal server error"
 	InternalRedisError = "internal redis error occur"
 )
 
@@ -50,7 +51,7 @@ var codeToMessage = map[int]string{
 	ErrRedisHMSETError:     InternalRedisError,
 	ErrRedisExistError:     InternalRedisError,
 	ErrRedisHMDELError:     InternalRedisError,
-	ErrInternalServerError: "internal server error",
+	ErrInternalServerError: InternalError,
 }
 
 func GetCustomErrMessage(code int, error string) string {

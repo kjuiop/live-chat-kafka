@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Gin struct {
@@ -33,8 +34,10 @@ func NewGinServer(cfg *config.EnvConfig) Client {
 	router.Use(middleware.SetCorsPolicy())
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", serverCfg.Port),
-		Handler: router,
+		Addr:         fmt.Sprintf(":%s", serverCfg.Port),
+		Handler:      router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	return &Gin{

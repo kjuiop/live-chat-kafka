@@ -45,6 +45,8 @@ func LoggingMiddleware(c *gin.Context) {
 		"status_code", param.StatusCode,
 		"body_size", param.BodySize,
 		"path", param.Path,
+		"user_agent", c.Request.UserAgent(),
+		"status_code", param.StatusCode,
 		"latency", param.Latency.String(),
 	)
 

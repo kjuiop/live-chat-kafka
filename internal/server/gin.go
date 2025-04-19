@@ -52,7 +52,7 @@ func (g *Gin) Run() {
 	if errors.Is(err, http.ErrServerClosed) {
 		slog.Debug("server close")
 	} else {
-		slog.Error("run server error", "error", err)
+		log.Fatalf("run server error : %v", err)
 	}
 }
 

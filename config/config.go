@@ -4,14 +4,27 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-type EnvConfig struct {
+type APIEnvConfig struct {
 	Logger Logger
-	Server Server
+	Server APIServer
 	Redis  Redis
 	Kafka  Kafka
 }
 
-type Server struct {
+type WorkerEnvConfig struct {
+	Logger Logger
+	Server WorkerServer
+	Redis  Redis
+	Kafka  Kafka
+}
+
+type APIServer struct {
+	Mode           string `envconfig:"LCK_ENV" default:"dev"`
+	Port           string `envconfig:"LCK_SERVER_PORT" default:"8090"`
+	TrustedProxies string `envconfig:"LCK_TRUSTED_PROXIES" default:"127.0.0.1/32"`
+}
+
+type WorkerServer struct {
 	Mode           string `envconfig:"LCK_ENV" default:"dev"`
 	Port           string `envconfig:"LCK_SERVER_PORT" default:"8090"`
 	TrustedProxies string `envconfig:"LCK_TRUSTED_PROXIES" default:"127.0.0.1/32"`
@@ -38,8 +51,8 @@ type Kafka struct {
 	ConsumerTimeout int    `envconfig:"LCK_KAFKA_CONSUMER_TIMEOUT" default:"1000"`
 }
 
-func LoadEnvConfig() (*EnvConfig, error) {
-	var config EnvConfig
+func LoadAPIEnvConfig() (*APIEnvConfig, error) {
+	var config APIEnvConfig
 	if err := envconfig.Process("lck", &config); err != nil {
 		return nil, err
 	}
@@ -51,6 +64,23 @@ func LoadEnvConfig() (*EnvConfig, error) {
 	return &config, nil
 }
 
-func (c *EnvConfig) CheckValid() error {
+func (a *APIEnvConfig) CheckValid() error {
+	return nil
+}
+
+func LoadWorkerEnvConfig() (*WorkerEnvConfig, error) {
+	var config WorkerEnvConfig
+	if err := envconfig.Process("lck", &config); err != nil {
+		return nil, err
+	}
+
+	if err := config.CheckValid(); err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func (w *WorkerEnvConfig) CheckValid() error {
 	return nil
 }

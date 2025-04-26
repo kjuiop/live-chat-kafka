@@ -8,11 +8,17 @@ import (
 type RouterConfig struct {
 	Engine           *gin.Engine
 	SystemController *controller.SystemController
+	RoomController   *controller.RoomController
 }
 
 func (r *RouterConfig) APISetup() {
 	api := r.Engine.Group("/api")
+	r.SetupRoomRouter(api)
 	r.SetupSystemRouter(api)
+}
+
+func (r *RouterConfig) SetupRoomRouter(api *gin.RouterGroup) {
+	api.POST("/rooms", r.RoomController.CreateChatRoom)
 }
 
 func (r *RouterConfig) SetupSystemRouter(api *gin.RouterGroup) {

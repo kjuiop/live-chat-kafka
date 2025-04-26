@@ -6,6 +6,8 @@ import (
 	"live-chat-kafka/api/route"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/database"
+	rr "live-chat-kafka/internal/domain/room/repository"
+	ru "live-chat-kafka/internal/domain/room/usecase"
 	"live-chat-kafka/internal/domain/system"
 	sps "live-chat-kafka/internal/domain/system/pubsub"
 	sr "live-chat-kafka/internal/domain/system/repository"
@@ -75,16 +77,20 @@ func (a *App) Stop(ctx context.Context) {
 func (a *App) setupRouter() {
 
 	systemRepo := sr.NewSystemRepository(a.db)
+	roomRepo := rr.NewRoomRepository(a.db)
 
 	systemPubSub := sps.NewSystemPubSub(a.cfg.Kafka, a.mq)
 
 	systemUseCase := su.NewSystemUseCase(systemRepo, systemPubSub)
+	roomUseCase := ru.NewRoomUseCase(roomRepo)
 
 	systemController := controller.NewSystemController(systemUseCase)
+	roomController := controller.NewRoomController(a.cfg.Policy, roomUseCase)
 
 	router := route.RouterConfig{
 		Engine:           a.srv.GetEngine(),
 		SystemController: systemController,
+		RoomController:   roomController,
 	}
 	router.APISetup()
 

@@ -6,12 +6,13 @@ import (
 
 type EnvConfig struct {
 	Logger Logger
-	Server ServerConfig
+	Server Server
 	Redis  Redis
 	Kafka  Kafka
+	Policy Policy
 }
 
-type ServerConfig struct {
+type Server struct {
 	Mode           string `envconfig:"LCK_ENV" default:"dev"`
 	Port           string `envconfig:"LCK_SERVER_PORT" default:"8090"`
 	TrustedProxies string `envconfig:"LCK_TRUSTED_PROXIES" default:"127.0.0.1/32"`
@@ -36,6 +37,11 @@ type Kafka struct {
 	GroupID         string `envconfig:"LCK_KAFKA_GROUP_ID" default:"chat-consumer-1"`
 	ClientID        string `envconfig:"LCK_KAFKA_CLIENT_ID" default:"chat-producer-1"`
 	ConsumerTimeout int    `envconfig:"LCK_KAFKA_CONSUMER_TIMEOUT" default:"1000"`
+}
+
+type Policy struct {
+	Prefix         string `envconfig:"LCS_ROOM_PREFIX" default:"N1,N2"`
+	ContextTimeout int    `envconfig:"LCS_CONTEXT_TIMEOUT" default:"60"`
 }
 
 func LoadEnvConfig() (*EnvConfig, error) {

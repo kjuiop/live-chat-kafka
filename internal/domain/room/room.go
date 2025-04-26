@@ -28,6 +28,16 @@ func NewRoomInfo(req form.RoomRequest, prefix string) *RoomInfo {
 	}
 }
 
+func UpdateRoomInfo(req form.RoomRequest, roomId string) *RoomInfo {
+	return &RoomInfo{
+		RoomId:       roomId,
+		CustomerId:   req.CustomerId,
+		ChannelKey:   req.ChannelKey,
+		BroadcastKey: req.BroadCastKey,
+		CreatedAt:    time.Now().Unix(),
+	}
+}
+
 func (r *RoomInfo) ConvertRedisData() map[string]interface{} {
 	return map[string]interface{}{
 		"room_id":       r.RoomId,
@@ -48,10 +58,14 @@ type UseCase interface {
 	CreateChatRoom(ctx context.Context, room RoomInfo) error
 	GetChatRoomById(ctx context.Context, roomId string) (*RoomInfo, error)
 	RegisterRoomId(ctx context.Context, room RoomInfo) error
+	CheckExistRoomId(ctx context.Context, roomId string) (bool, error)
+	UpdateChatRoom(ctx context.Context, roomId string, room RoomInfo) (*RoomInfo, error)
 }
 
 type Repository interface {
 	Create(ctx context.Context, data RoomInfo) error
 	Fetch(ctx context.Context, roomId string) (*RoomInfo, error)
+	Exists(ctx context.Context, roomId string) (bool, error)
+	Update(ctx context.Context, roomId string, data RoomInfo) error
 	SetRoomMap(ctx context.Context, data RoomInfo) error
 }

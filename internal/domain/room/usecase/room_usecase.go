@@ -47,3 +47,31 @@ func (r *roomUseCase) GetChatRoomById(c context.Context, roomId string) (*room.R
 
 	return roomInfo, nil
 }
+
+func (r *roomUseCase) CheckExistRoomId(c context.Context, roomId string) (bool, error) {
+	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
+	defer cancel()
+
+	isExist, err := r.roomRepo.Exists(ctx, roomId)
+	if err != nil {
+		return false, err
+	}
+
+	return isExist, nil
+}
+
+func (r *roomUseCase) UpdateChatRoom(c context.Context, roomId string, roomInfo room.RoomInfo) (*room.RoomInfo, error) {
+	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
+	defer cancel()
+
+	if err := r.roomRepo.Update(ctx, roomId, roomInfo); err != nil {
+		return nil, err
+	}
+
+	savedInfo, err := r.roomRepo.Fetch(c, roomId)
+	if err != nil {
+		return nil, err
+	}
+
+	return savedInfo, nil
+}

@@ -75,3 +75,11 @@ func (r *redisClient) HGetAll(ctx context.Context, key string) (map[string]strin
 
 	return result, nil
 }
+
+func (r *redisClient) Exists(ctx context.Context, key string) (bool, error) {
+	isExist, err := r.client.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return isExist == 1, nil
+}

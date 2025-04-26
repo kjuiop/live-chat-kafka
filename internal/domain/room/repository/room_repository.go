@@ -61,6 +61,25 @@ func (r roomRepository) Fetch(ctx context.Context, roomId string) (*room.RoomInf
 	return roomInfo, nil
 }
 
+func (r roomRepository) Exists(ctx context.Context, roomId string) (bool, error) {
+
+	isExist, err := r.db.Exists(ctx, convertRoomKey(roomId))
+	if err != nil {
+		return false, fmt.Errorf("fail redis cmd exist err : %w", err)
+	}
+
+	return isExist, nil
+}
+
+func (r roomRepository) Update(ctx context.Context, roomId string, data room.RoomInfo) error {
+
+	if err := r.db.Set(ctx, convertRoomKey(roomId), data.ConvertRedisData(), RoomExpire); err != nil {
+		return fmt.Errorf("create chat room hm set err : %w", err)
+	}
+
+	return nil
+}
+
 func convertRoomKey(roomId string) string {
 	return fmt.Sprintf("%s_%s", LiveChatServerRoom, roomId)
 }

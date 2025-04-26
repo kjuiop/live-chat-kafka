@@ -95,3 +95,45 @@ func (r *RoomController) GetChatRoom(c *gin.Context) {
 
 	r.successResponse(c, http.StatusOK, roomRes)
 }
+
+func (r *RoomController) UpdateChatRoom(c *gin.Context) {
+	roomId := c.Param("room_id")
+	if len(roomId) == 0 {
+		r.failResponse(c, http.StatusBadRequest, models.ErrEmptyParam, fmt.Errorf("not exist room id, err : %s", roomId))
+		return
+	}
+
+	req := form.RoomRequest{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		r.failResponse(c, http.StatusBadRequest, models.ErrParsing, fmt.Errorf("UpdateChatRoom json parsing err : %w", err))
+		return
+	}
+
+	isExist, err := r.RoomUseCase.CheckExistRoomId(c, roomId)
+	if err != nil {
+		r.failResponse(c, http.StatusInternalServerError, models.ErrRedisExistError, fmt.Errorf("fail exec redis exist cmd, err : %w", err))
+		return
+	}
+
+	if !isExist {
+		r.failResponse(c, http.StatusNotFound, models.ErrNotFoundChatRoom, fmt.Errorf("not found chat room, err : %w", err))
+		return
+	}
+
+	roomInfo := room.UpdateRoomInfo(req, roomId)
+	savedInfo, err := r.RoomUseCase.UpdateChatRoom(c, roomId, *roomInfo)
+	if err != nil {
+		r.failResponse(c, http.StatusInternalServerError, models.ErrRedisHMSETError, fmt.Errorf("fail exec redis save cmd, err : %w", err))
+		return
+	}
+
+	roomRes := form.RoomResponse{
+		RoomId:       savedInfo.RoomId,
+		CustomerId:   savedInfo.CustomerId,
+		ChannelKey:   savedInfo.ChannelKey,
+		BroadcastKey: savedInfo.BroadcastKey,
+		CreatedAt:    savedInfo.CreatedAt,
+	}
+
+	r.successResponse(c, http.StatusOK, roomRes)
+}

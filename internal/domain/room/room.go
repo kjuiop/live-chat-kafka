@@ -1,6 +1,7 @@
 package room
 
 import (
+	"context"
 	"fmt"
 	"live-chat-kafka/api/form"
 	"live-chat-kafka/utils"
@@ -27,6 +28,16 @@ func NewRoomInfo(req form.RoomRequest, prefix string) *RoomInfo {
 	}
 }
 
+func (r *RoomInfo) ConvertRedisData() map[string]interface{} {
+	return map[string]interface{}{
+		"room_id":       r.RoomId,
+		"customer_id":   r.CustomerId,
+		"channel_key":   r.ChannelKey,
+		"broadcast_key": r.BroadcastKey,
+		"created_at":    r.CreatedAt,
+	}
+}
+
 func getChatPrefix(prefix string) string {
 	array := strings.Split(prefix, ",")
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -34,7 +45,11 @@ func getChatPrefix(prefix string) string {
 }
 
 type UseCase interface {
+	CreateChatRoom(ctx context.Context, room RoomInfo) error
+	RegisterRoomId(ctx context.Context, room RoomInfo) error
 }
 
 type Repository interface {
+	Create(ctx context.Context, data RoomInfo) error
+	SetRoomMap(ctx context.Context, data RoomInfo) error
 }

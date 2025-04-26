@@ -10,10 +10,6 @@ import (
 	"time"
 )
 
-const (
-	LiveChatServerInfo = "live-chat-server-info"
-)
-
 type redisClient struct {
 	cfg    config.Redis
 	client *redis.Client
@@ -37,22 +33,27 @@ func NewRedisSingleClient(ctx context.Context, cfg config.Redis) (Client, error)
 	}, nil
 }
 
-func (r *redisClient) GetAvailableServerList() (map[string]string, error) {
-	result, err := r.client.HGetAll(context.TODO(), LiveChatServerInfo).Result()
+func (r *redisClient) Set(ctx context.Context, key string, data interface{}, expiration time.Duration) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return r.client.Set(ctx, key, jsonData, expiration).Err()
+}
+
+func (r *redisClient) HSet(ctx context.Context, key, field string, data interface{}, expiration time.Duration) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return r.client.HSet(ctx, key, field, jsonData, expiration).Err()
+}
+
+func (r *redisClient) HGetAll(ctx context.Context, key string) (map[string]string, error) {
+	result, err := r.client.HGetAll(ctx, key).Result()
 	if err != nil {
 		return nil, models.GetCustomErr(models.ErrNotFoundServerInfo)
 	}
 
 	return result, nil
-}
-
-func (r *redisClient) SaveChatServerInfo(key string, data map[string]interface{}) error {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	if err := r.client.HSet(context.TODO(), LiveChatServerInfo, key, jsonData).Err(); err != nil {
-		return err
-	}
-	return nil
 }

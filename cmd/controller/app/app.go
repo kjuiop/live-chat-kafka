@@ -19,7 +19,7 @@ import (
 )
 
 type App struct {
-	cfg *config.APIEnvConfig
+	cfg *config.EnvConfig
 	srv server.Client
 	mq  message_queue.Client
 	db  database.Client
@@ -28,7 +28,7 @@ type App struct {
 
 func NewApplication(ctx context.Context) *App {
 
-	cfg, err := config.LoadAPIEnvConfig()
+	cfg, err := config.LoadEnvConfig()
 	if err != nil {
 		log.Fatalf("fail to read config err : %v", err)
 	}

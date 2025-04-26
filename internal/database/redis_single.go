@@ -83,3 +83,12 @@ func (r *redisClient) Exists(ctx context.Context, key string) (bool, error) {
 	}
 	return isExist == 1, nil
 }
+
+func (r *redisClient) DelByKey(ctx context.Context, key string) error {
+
+	if err := r.client.Del(ctx, key).Err(); err != nil {
+		return err
+	}
+
+	return nil
+}

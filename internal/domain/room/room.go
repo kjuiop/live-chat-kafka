@@ -60,6 +60,7 @@ type UseCase interface {
 	RegisterRoomId(ctx context.Context, room RoomInfo) error
 	CheckExistRoomId(ctx context.Context, roomId string) (bool, error)
 	UpdateChatRoom(ctx context.Context, roomId string, room RoomInfo) (*RoomInfo, error)
+	DeleteChatRoom(ctx context.Context, roomId string) error
 }
 
 type Repository interface {
@@ -67,5 +68,6 @@ type Repository interface {
 	Fetch(ctx context.Context, roomId string) (*RoomInfo, error)
 	Exists(ctx context.Context, roomId string) (bool, error)
 	Update(ctx context.Context, roomId string, data RoomInfo) error
+	Delete(ctx context.Context, roomId string) error
 	SetRoomMap(ctx context.Context, data RoomInfo) error
 }

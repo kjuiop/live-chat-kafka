@@ -137,3 +137,31 @@ func (r *RoomController) UpdateChatRoom(c *gin.Context) {
 
 	r.successResponse(c, http.StatusOK, roomRes)
 }
+
+func (r *RoomController) DeleteChatRoom(c *gin.Context) {
+
+	roomId := c.Param("room_id")
+	if len(roomId) == 0 {
+		r.failResponse(c, http.StatusBadRequest, models.ErrEmptyParam, fmt.Errorf("not exist room id, err : %s", roomId))
+		return
+	}
+
+	isExist, err := r.RoomUseCase.CheckExistRoomId(c, roomId)
+	if err != nil {
+		r.failResponse(c, http.StatusInternalServerError, models.ErrRedisExistError, fmt.Errorf("fail exec redis exist cmd, err : %w", err))
+		return
+	}
+
+	// 204 status 일 때에는 response body 를 전달하지 않는다.
+	if !isExist {
+		r.successResponse(c, http.StatusNoContent, nil)
+		return
+	}
+
+	if err := r.RoomUseCase.DeleteChatRoom(c, roomId); err != nil {
+		r.failResponse(c, http.StatusInternalServerError, models.ErrRedisHMDELError, fmt.Errorf("fail exec redis hmdel cmd, err : %w", err))
+		return
+	}
+
+	r.successResponse(c, http.StatusOK, nil)
+}

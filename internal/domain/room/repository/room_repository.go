@@ -80,6 +80,15 @@ func (r roomRepository) Update(ctx context.Context, roomId string, data room.Roo
 	return nil
 }
 
+func (r roomRepository) Delete(ctx context.Context, roomId string) error {
+
+	if err := r.db.DelByKey(ctx, convertRoomKey(roomId)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func convertRoomKey(roomId string) string {
 	return fmt.Sprintf("%s_%s", LiveChatServerRoom, roomId)
 }

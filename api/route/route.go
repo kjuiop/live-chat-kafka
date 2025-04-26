@@ -22,6 +22,7 @@ func (r *RouterConfig) SetupRoomRouter(api *gin.RouterGroup) {
 	api.GET("/rooms/:room_id", r.RoomController.GetChatRoom)
 	api.PUT("/rooms/:room_id", r.RoomController.UpdateChatRoom)
 	api.DELETE("/rooms/:room_id", r.RoomController.DeleteChatRoom)
+	api.GET("/rooms/id", r.RoomController.GetChatRoomId)
 }
 
 func (r *RouterConfig) SetupSystemRouter(api *gin.RouterGroup) {

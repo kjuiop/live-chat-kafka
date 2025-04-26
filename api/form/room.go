@@ -13,3 +13,8 @@ type RoomResponse struct {
 	BroadcastKey string `json:"broadcast_key,omitempty"`
 	CreatedAt    int64  `json:"created_at,omitempty"`
 }
+
+type RoomIdRequest struct {
+	ChannelKey   string `form:"channel_key" binding:"required"`
+	BroadCastKey string `form:"broadcast_key" binding:"required"`
+}

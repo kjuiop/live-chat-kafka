@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"live-chat-kafka/api/form"
 	"live-chat-kafka/internal/domain/room"
 	"time"
 )
@@ -84,4 +85,16 @@ func (r *roomUseCase) DeleteChatRoom(c context.Context, roomId string) error {
 		return err
 	}
 	return nil
+}
+
+func (r *roomUseCase) GetChatRoomId(c context.Context, req form.RoomIdRequest) (*room.RoomInfo, error) {
+	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
+	defer cancel()
+
+	roomInfo, err := r.roomRepo.GetRoomMap(ctx, req.ChannelKey, req.BroadCastKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return roomInfo, nil
 }

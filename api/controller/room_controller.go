@@ -96,6 +96,26 @@ func (r *RoomController) GetChatRoom(c *gin.Context) {
 	r.successResponse(c, http.StatusOK, roomRes)
 }
 
+func (r *RoomController) GetChatRoomId(c *gin.Context) {
+	req := form.RoomIdRequest{}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		r.failResponse(c, http.StatusBadRequest, models.ErrParsing, fmt.Errorf("GetChatRoomId bind fail, err : %w", err))
+		return
+	}
+
+	roomInfo, err := r.RoomUseCase.GetChatRoomId(c, req)
+	if err != nil {
+		r.failResponse(c, http.StatusNotFound, models.ErrNotFoundChatRoom, fmt.Errorf("GetChatRoomId fail get roomInfo, err : %w", err))
+		return
+	}
+
+	roomRes := form.RoomResponse{
+		RoomId: roomInfo.RoomId,
+	}
+
+	r.successResponse(c, http.StatusOK, roomRes)
+}
+
 func (r *RoomController) UpdateChatRoom(c *gin.Context) {
 	roomId := c.Param("room_id")
 	if len(roomId) == 0 {

@@ -67,6 +67,16 @@ func (r *redisClient) HSet(ctx context.Context, key, field string, data interfac
 	return r.client.HSet(ctx, key, field, jsonData, expiration).Err()
 }
 
+func (r *redisClient) HGet(ctx context.Context, key, mapKey string) (string, error) {
+
+	result, err := r.client.HGet(ctx, key, mapKey).Result()
+	if err != nil {
+		return "", fmt.Errorf("fail hget data, err : %w", err)
+	}
+
+	return result, nil
+}
+
 func (r *redisClient) HGetAll(ctx context.Context, key string) (map[string]string, error) {
 	result, err := r.client.HGetAll(ctx, key).Result()
 	if err != nil {

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"live-chat-kafka/internal/database"
 	"live-chat-kafka/internal/domain/room"
@@ -39,12 +38,7 @@ func (r roomRepository) Create(ctx context.Context, data room.RoomInfo) error {
 
 func (r roomRepository) SetRoomMap(ctx context.Context, data room.RoomInfo) error {
 
-	jData, err := json.Marshal(data.ConvertRedisData())
-	if err != nil {
-		return fmt.Errorf("set room map json encoding fail, err : %w", err)
-	}
-
-	if err := r.db.Set(ctx, generateRoomMapKey(data.ChannelKey, data.BroadcastKey), string(jData), RoomExpire); err != nil {
+	if err := r.db.Set(ctx, generateRoomMapKey(data.ChannelKey, data.BroadcastKey), data.ConvertRedisData(), RoomExpire); err != nil {
 		return fmt.Errorf("set room map err : %w", err)
 	}
 
@@ -87,6 +81,16 @@ func (r roomRepository) Delete(ctx context.Context, roomId string) error {
 	}
 
 	return nil
+}
+
+func (r roomRepository) GetRoomMap(ctx context.Context, channelKey, broadcastKey string) (*room.RoomInfo, error) {
+
+	roomInfo := &room.RoomInfo{}
+	if err := r.db.Get(ctx, generateRoomMapKey(channelKey, broadcastKey), roomInfo); err != nil {
+		return nil, fmt.Errorf("get chat room map err : %w", err)
+	}
+
+	return roomInfo, nil
 }
 
 func convertRoomKey(roomId string) string {

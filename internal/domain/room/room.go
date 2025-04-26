@@ -46,10 +46,12 @@ func getChatPrefix(prefix string) string {
 
 type UseCase interface {
 	CreateChatRoom(ctx context.Context, room RoomInfo) error
+	GetChatRoomById(ctx context.Context, roomId string) (*RoomInfo, error)
 	RegisterRoomId(ctx context.Context, room RoomInfo) error
 }
 
 type Repository interface {
 	Create(ctx context.Context, data RoomInfo) error
+	Fetch(ctx context.Context, roomId string) (*RoomInfo, error)
 	SetRoomMap(ctx context.Context, data RoomInfo) error
 }

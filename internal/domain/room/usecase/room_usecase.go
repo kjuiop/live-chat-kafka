@@ -18,14 +18,14 @@ func NewRoomUseCase(roomRepo room.Repository, timeout time.Duration) room.UseCas
 	}
 }
 
-func (r roomUseCase) CreateChatRoom(c context.Context, room room.RoomInfo) error {
+func (r *roomUseCase) CreateChatRoom(c context.Context, room room.RoomInfo) error {
 	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
 	defer cancel()
 
 	return r.roomRepo.Create(ctx, room)
 }
 
-func (r roomUseCase) RegisterRoomId(c context.Context, roomInfo room.RoomInfo) error {
+func (r *roomUseCase) RegisterRoomId(c context.Context, roomInfo room.RoomInfo) error {
 	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
 	defer cancel()
 
@@ -34,4 +34,16 @@ func (r roomUseCase) RegisterRoomId(c context.Context, roomInfo room.RoomInfo) e
 	}
 
 	return nil
+}
+
+func (r *roomUseCase) GetChatRoomById(c context.Context, roomId string) (*room.RoomInfo, error) {
+	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
+	defer cancel()
+
+	roomInfo, err := r.roomRepo.Fetch(ctx, roomId)
+	if err != nil {
+		return nil, err
+	}
+
+	return roomInfo, nil
 }

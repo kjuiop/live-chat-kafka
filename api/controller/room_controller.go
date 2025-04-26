@@ -71,3 +71,27 @@ func (r *RoomController) CreateChatRoom(c *gin.Context) {
 
 	r.successResponse(c, http.StatusCreated, roomRes)
 }
+
+func (r *RoomController) GetChatRoom(c *gin.Context) {
+	roomId := c.Param("room_id")
+	if len(roomId) == 0 {
+		r.failResponse(c, http.StatusBadRequest, models.ErrEmptyParam, fmt.Errorf("not exist room id, err : %s", roomId))
+		return
+	}
+
+	roomInfo, err := r.RoomUseCase.GetChatRoomById(c, roomId)
+	if err != nil {
+		r.failResponse(c, http.StatusNotFound, models.ErrNotFoundChatRoom, fmt.Errorf("not found chat room, err : %w", err))
+		return
+	}
+
+	roomRes := form.RoomResponse{
+		RoomId:       roomInfo.RoomId,
+		CustomerId:   roomInfo.CustomerId,
+		ChannelKey:   roomInfo.ChannelKey,
+		BroadcastKey: roomInfo.BroadcastKey,
+		CreatedAt:    roomInfo.CreatedAt,
+	}
+
+	r.successResponse(c, http.StatusOK, roomRes)
+}

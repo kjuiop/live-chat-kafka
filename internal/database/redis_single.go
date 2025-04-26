@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"live-chat-kafka/config"
@@ -39,6 +40,23 @@ func (r *redisClient) Set(ctx context.Context, key string, data interface{}, exp
 		return err
 	}
 	return r.client.Set(ctx, key, jsonData, expiration).Err()
+}
+
+func (r *redisClient) Get(ctx context.Context, key string, dest interface{}) error {
+
+	val, err := r.client.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return fmt.Errorf("chat room data is not exist : %s", key)
+		}
+		return err
+	}
+
+	if err := json.Unmarshal([]byte(val), dest); err != nil {
+		return fmt.Errorf("unmarshal chat room info err: %w", err)
+	}
+
+	return nil
 }
 
 func (r *redisClient) HSet(ctx context.Context, key, field string, data interface{}, expiration time.Duration) error {

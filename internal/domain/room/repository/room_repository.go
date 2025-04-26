@@ -51,6 +51,16 @@ func (r roomRepository) SetRoomMap(ctx context.Context, data room.RoomInfo) erro
 	return nil
 }
 
+func (r roomRepository) Fetch(ctx context.Context, roomId string) (*room.RoomInfo, error) {
+
+	roomInfo := &room.RoomInfo{}
+	if err := r.db.Get(ctx, convertRoomKey(roomId), roomInfo); err != nil {
+		return nil, fmt.Errorf("get chat room info err : %w", err)
+	}
+
+	return roomInfo, nil
+}
+
 func convertRoomKey(roomId string) string {
 	return fmt.Sprintf("%s_%s", LiveChatServerRoom, roomId)
 }

@@ -1,11 +1,16 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"live-chat-kafka/internal/database"
 	"live-chat-kafka/internal/domain/system"
 	"live-chat-kafka/internal/models"
+)
+
+const (
+	LiveChatServerInfo = "live-chat-server-info"
 )
 
 type systemRepository struct {
@@ -20,7 +25,7 @@ func NewSystemRepository(db database.Client) system.Repository {
 
 func (s *systemRepository) GetAvailableServerList() ([]system.ServerInfo, error) {
 
-	data, err := s.db.GetAvailableServerList()
+	data, err := s.db.HGetAll(context.TODO(), LiveChatServerInfo)
 	if err != nil {
 		return nil, models.GetCustomErr(models.ErrNotFoundServerInfo)
 	}
@@ -44,7 +49,7 @@ func (s *systemRepository) GetAvailableServerList() ([]system.ServerInfo, error)
 func (s *systemRepository) SetChatServerInfo(ip string, available bool) error {
 
 	data := system.NewServerInfo(ip, available)
-	if err := s.db.SaveChatServerInfo(data.IP, data.ConvertRedisData()); err != nil {
+	if err := s.db.HSet(context.TODO(), LiveChatServerInfo, data.IP, data.ConvertRedisData(), 0); err != nil {
 		return err
 	}
 

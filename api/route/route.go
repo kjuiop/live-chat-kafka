@@ -8,11 +8,21 @@ import (
 type RouterConfig struct {
 	Engine           *gin.Engine
 	SystemController *controller.SystemController
+	RoomController   *controller.RoomController
 }
 
 func (r *RouterConfig) APISetup() {
 	api := r.Engine.Group("/api")
+	r.SetupRoomRouter(api)
 	r.SetupSystemRouter(api)
+}
+
+func (r *RouterConfig) SetupRoomRouter(api *gin.RouterGroup) {
+	api.POST("/rooms", r.RoomController.CreateChatRoom)
+	api.GET("/rooms/:room_id", r.RoomController.GetChatRoom)
+	api.PUT("/rooms/:room_id", r.RoomController.UpdateChatRoom)
+	api.DELETE("/rooms/:room_id", r.RoomController.DeleteChatRoom)
+	api.GET("/rooms/id", r.RoomController.GetChatRoomId)
 }
 
 func (r *RouterConfig) SetupSystemRouter(api *gin.RouterGroup) {

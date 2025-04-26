@@ -9,6 +9,7 @@ type EnvConfig struct {
 	Server Server
 	Redis  Redis
 	Kafka  Kafka
+	Policy Policy
 }
 
 type Server struct {
@@ -38,19 +39,15 @@ type Kafka struct {
 	ConsumerTimeout int    `envconfig:"LCK_KAFKA_CONSUMER_TIMEOUT" default:"1000"`
 }
 
+type Policy struct {
+	Prefix         string `envconfig:"LCS_ROOM_PREFIX" default:"N1,N2"`
+	ContextTimeout int    `envconfig:"LCS_CONTEXT_TIMEOUT" default:"60"`
+}
+
 func LoadEnvConfig() (*EnvConfig, error) {
 	var config EnvConfig
 	if err := envconfig.Process("lck", &config); err != nil {
 		return nil, err
 	}
-
-	if err := config.CheckValid(); err != nil {
-		return nil, err
-	}
-
 	return &config, nil
-}
-
-func (c *EnvConfig) CheckValid() error {
-	return nil
 }

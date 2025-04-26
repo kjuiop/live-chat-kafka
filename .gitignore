@@ -6,3 +6,6 @@
 bin
 live-chat-api
 live-chat-worker
+
+# env
+test.env

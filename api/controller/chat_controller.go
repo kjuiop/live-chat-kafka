@@ -8,6 +8,7 @@ import (
 	"live-chat-kafka/internal/domain/chat"
 	"live-chat-kafka/internal/domain/chat/types"
 	"live-chat-kafka/internal/models"
+	"log/slog"
 	"net/http"
 )
 
@@ -56,6 +57,8 @@ func (cc *ChatController) ServeWS(c *gin.Context) {
 	roomId := c.Param("room_id")
 	userId := c.Param("user_id")
 
+	logger := slog.With("roomId", roomId, "userId", userId)
+
 	socket, err := cc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		cc.failResponse(c, http.StatusInternalServerError, models.ErrNotFoundChatRoom, fmt.Errorf("not found chat room, roomId : %s, err : %w", roomId, err))
@@ -64,18 +67,15 @@ func (cc *ChatController) ServeWS(c *gin.Context) {
 
 	chatRoom, err := cc.ChatUseCase.GetChatRoom(c, roomId)
 	if err != nil {
-		cc.failResponse(c, http.StatusBadRequest, models.ErrNotFoundChatRoom, fmt.Errorf("not found chat room, roomId : %s, err : %w", roomId, err))
+		logger.Error("not found chat room", "roomId", roomId, "userId", userId, "err", err)
+		if err := socket.Close(); err != nil {
+			logger.Warn("socket close error", "roomId", roomId, "userId", userId, "err", err)
+		}
 		return
 	}
 
 	if err := cc.ChatUseCase.ServeWs(c, socket, chatRoom, userId); err != nil {
-		cc.failResponse(c, http.StatusInternalServerError, models.ErrInternalServerError, fmt.Errorf("failed serve websocket, roomId : %s, err : %w", roomId, err))
+		logger.Error("failed to serve websocket", "roomId", roomId, "userId", userId, "err", err)
 		return
 	}
-
-	cc.successResponse(c, http.StatusOK, form.APIResponse{
-		ErrorCode: 0,
-		Message:   "close chat connection",
-		Result:    nil,
-	})
 }

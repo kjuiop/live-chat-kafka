@@ -41,14 +41,13 @@ func (cu *chatUseCase) ServeWs(ctx context.Context, socket *websocket.Conn, chat
 	client := chat.NewClient(socket, chatRoom, userId)
 
 	chatRoom.Join <- client
-
 	defer func() {
 		chatRoom.Leave <- client
 	}()
 
-	go client.Write()
+	go client.Write(ctx)
 
-	client.Read()
+	client.Read(ctx)
 
 	return nil
 }

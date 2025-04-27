@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"context"
 	"github.com/gorilla/websocket"
 	"live-chat-kafka/internal/domain/chat/types"
 	"log/slog"
@@ -8,10 +9,11 @@ import (
 )
 
 type Client struct {
-	Send   chan *Message
-	Room   *Room
-	UserID string
-	Socket *websocket.Conn
+	Send     chan *Message
+	Room     *Room
+	UserID   string
+	Socket   *websocket.Conn
+	isClosed bool
 }
 
 func NewClient(socket *websocket.Conn, r *Room, clientId string) *Client {
@@ -23,42 +25,62 @@ func NewClient(socket *websocket.Conn, r *Room, clientId string) *Client {
 	}
 }
 
-func (c *Client) Write() {
+func (c *Client) Write(ctx context.Context) {
 	defer func() {
-		if err := c.Socket.Close(); err != nil {
-			slog.Error("failed socket connection close, client_id : %s, err : %s", c.UserID, err.Error())
+		if !c.isClosed && c.Socket != nil {
+			if err := c.Socket.Close(); err != nil {
+				slog.Error("failed socket connection close", "client_id", c.UserID, "err", err)
+			}
+			c.isClosed = true
 		}
 	}()
 	// client 가 메시지를 전송하는 함수
-
-	for msg := range c.Send {
-		if err := c.Socket.WriteJSON(msg); err != nil {
-			slog.Error("failed write message, client_id : %s, err : %s", c.UserID, err.Error())
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-c.Send:
+			if !ok {
+				return
+			}
+			if err := c.Socket.WriteJSON(msg); err != nil {
+				slog.Error("failed write message", "client_id", c.UserID, "err", err)
+				return
+			}
 		}
 	}
 }
 
-func (c *Client) Read() {
+func (c *Client) Read(ctx context.Context) {
 	defer func() {
-		if err := c.Socket.Close(); err != nil {
-			slog.Error("failed socket connection close, client_id : %s, err : %s", c.UserID, err.Error())
+		if !c.isClosed && c.Socket != nil {
+			if err := c.Socket.Close(); err != nil {
+				slog.Error("failed socket connection close", "client_id", c.UserID, "err", err)
+			}
+			c.isClosed = true
 		}
 	}()
 
 	// client 가 메시지를 읽는 함수
+ReadLoop:
 	for {
-		var msg *Message
-		if err := c.Socket.ReadJSON(&msg); err != nil {
-			if !websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
-				break
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			var msg *Message
+			if err := c.Socket.ReadJSON(&msg); err != nil {
+				if !websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived) {
+					break ReadLoop
+				}
+
+				slog.Error("failed read message", "client_id", c.UserID, "err", err)
+				continue
 			}
+			msg.Time = time.Now().Unix()
+			msg.SendUserId = c.UserID
 
-			slog.Error("failed read message, client_id : %s, err : %s", c.UserID, err.Error())
-			continue
+			c.Room.Forward <- msg
 		}
-		msg.Time = time.Now().Unix()
-		msg.SendUserId = c.UserID
-
-		c.Room.Forward <- msg
 	}
 }

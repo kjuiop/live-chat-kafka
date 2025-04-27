@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/models"
+	"log/slog"
 	"time"
 )
 
@@ -60,11 +61,33 @@ func (r *redisClient) Get(ctx context.Context, key string, dest interface{}) err
 }
 
 func (r *redisClient) HSet(ctx context.Context, key, field string, data interface{}, expiration time.Duration) error {
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
-	return r.client.HSet(ctx, key, field, jsonData, expiration).Err()
+
+	pipe := r.client.TxPipeline()
+	pipe.HSet(ctx, key, field, jsonData)
+	if expiration > 0 {
+		pipe.Expire(ctx, key, expiration)
+	}
+
+	cmds, err := pipe.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("redis pipeline exec error: %w", err)
+	}
+
+	for _, cmd := range cmds {
+		if cmd.Err() != nil {
+			if delErr := r.client.Del(ctx, key); delErr != nil {
+				slog.Warn("warn rollback delete failed, key : %s, err : %s", key, delErr)
+			}
+			return fmt.Errorf("redis pipeline exec error: %w", cmd.Err())
+		}
+	}
+
+	return nil
 }
 
 func (r *redisClient) HGet(ctx context.Context, key, mapKey string) (string, error) {
@@ -101,4 +124,10 @@ func (r *redisClient) DelByKey(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (r *redisClient) Close() {
+	if err := r.client.Close(); err != nil {
+		slog.Error("fail close redis client : %s", err.Error())
+	}
 }

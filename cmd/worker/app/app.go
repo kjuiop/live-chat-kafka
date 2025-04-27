@@ -3,8 +3,13 @@ package app
 import (
 	"context"
 	"fmt"
+	"live-chat-kafka/api/controller"
+	"live-chat-kafka/api/route"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/database"
+	cu "live-chat-kafka/internal/domain/chat/usecase"
+	rr "live-chat-kafka/internal/domain/room/repository"
+	ru "live-chat-kafka/internal/domain/room/usecase"
 	"live-chat-kafka/internal/domain/system"
 	sps "live-chat-kafka/internal/domain/system/pubsub"
 	sr "live-chat-kafka/internal/domain/system/repository"
@@ -15,6 +20,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 )
 
 type App struct {
@@ -73,11 +79,26 @@ func (a *App) Stop(ctx context.Context) {
 
 func (a *App) setupRouter() {
 
+	timeout := time.Duration(a.cfg.Policy.ContextTimeout) * time.Second
+
 	systemRepo := sr.NewSystemRepository(a.db)
 
 	systemPubSub := sps.NewSystemPubSub(a.cfg.Kafka, a.mq)
 
+	// repository
+	roomRepository := rr.NewRoomRepository(a.db)
+
 	systemUseCase := su.NewSystemUseCase(systemRepo, systemPubSub)
+	roomUseCase := ru.NewRoomUseCase(roomRepository, timeout)
+	chatUseCase := cu.NewChatUseCase(roomUseCase, timeout)
+
+	chatController := controller.NewChatController(chatUseCase)
+
+	router := route.RouterConfig{
+		Engine:         a.srv.GetEngine(),
+		ChatController: chatController,
+	}
+	router.WSSetup()
 
 	a.su = systemUseCase
 }

@@ -2,8 +2,8 @@
 
 ---
 
-**Live Chat Server**는 실시간 채팅 메시지를 주고받을 수 있는 단독 서버 애플리케이션입니다.  
-HTTP API를 통해 채팅방을 생성하고, WebSocket을 통해 실시간 메시지를 주고받을 수 있습니다.
+`live-chat-kafka`는 **실시간 채팅 시스템**을 위한 서버 애플리케이션으로, Kafka와 WebSocket을 활용하여 확장성 있는 채팅 서비스 구축을 목표로 합니다.
+
 
 ## 🧩 시스템 구성
 
@@ -16,7 +16,7 @@ HTTP API를 통해 채팅방을 생성하고, WebSocket을 통해 실시간 메�
 
 ## ⚙️ 기술 스택
 
-- **언어**: Go 1.22
+- **언어**: Go 1.23
 - **웹 프레임워크**: Gin
 - **WebSocket**: Gorilla WebSocket
 - **데이터 저장소**: Redis
@@ -47,17 +47,17 @@ make build
 <br />
 
 
-## Live-Chat-Kafka WS Docs
+## 📄 API Spec Document
 
 
-### ws join func
+### ws join
 
 ```shell
 ws://localhost:8091/ws/chat/join/rooms/N1-01JSVD2N05RD0F4GPGDHR5C73J/user/jake
 ```
 
 
-### ws chat func
+### ws chat
 
 ```shell
 {

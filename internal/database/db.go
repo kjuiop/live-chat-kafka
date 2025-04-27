@@ -13,4 +13,5 @@ type Client interface {
 	HGetAll(ctx context.Context, key string) (map[string]string, error)
 	Exists(ctx context.Context, key string) (bool, error)
 	DelByKey(ctx context.Context, key string) error
+	Close()
 }

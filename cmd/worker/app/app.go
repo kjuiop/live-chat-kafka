@@ -71,10 +71,14 @@ func NewApplication(ctx context.Context) *App {
 func (a *App) Start(wg *sync.WaitGroup) {
 	defer wg.Done()
 	a.srv.Run()
+
 }
 
 func (a *App) Stop(ctx context.Context) {
+	a.su.PublishServerStatusEvent(a.addr, false)
+
 	a.srv.Shutdown(ctx)
+	a.db.Close()
 }
 
 func (a *App) setupRouter() {

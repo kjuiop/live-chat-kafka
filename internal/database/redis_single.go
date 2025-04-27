@@ -125,3 +125,9 @@ func (r *redisClient) DelByKey(ctx context.Context, key string) error {
 
 	return nil
 }
+
+func (r *redisClient) Close() {
+	if err := r.client.Close(); err != nil {
+		slog.Error("fail close redis client : %s", err.Error())
+	}
+}

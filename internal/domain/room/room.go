@@ -76,4 +76,5 @@ type Repository interface {
 
 type PubSub interface {
 	CreateChatRoom(ctx context.Context, roomId string) error
+	DeleteChatRoom(ctx context.Context, roomId string) error
 }

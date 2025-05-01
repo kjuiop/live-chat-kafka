@@ -10,5 +10,6 @@ type Client interface {
 	Poll(timeoutMs int) types.Event
 	PublishEvent(topic string, data []byte) (types.Event, error)
 	CreateTopic(ctx context.Context, topic string) error
+	DeleteTopic(ctx context.Context, topic string) error
 	Close()
 }

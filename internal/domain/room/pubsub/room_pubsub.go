@@ -27,3 +27,12 @@ func (r *roomPubSub) CreateChatRoom(ctx context.Context, roomId string) error {
 
 	return nil
 }
+
+func (r *roomPubSub) DeleteChatRoom(ctx context.Context, roomId string) error {
+
+	if err := r.mq.DeleteTopic(ctx, roomId); err != nil {
+		return err
+	}
+
+	return nil
+}

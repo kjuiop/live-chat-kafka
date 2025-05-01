@@ -94,6 +94,11 @@ func (r *roomUseCase) DeleteChatRoom(c context.Context, roomId string) error {
 	if err := r.roomRepo.Delete(ctx, roomId); err != nil {
 		return err
 	}
+
+	if err := r.roomPubSub.DeleteChatRoom(ctx, roomId); err != nil {
+		return err
+	}
+
 	return nil
 }
 

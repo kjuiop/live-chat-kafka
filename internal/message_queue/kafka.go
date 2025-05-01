@@ -85,6 +85,11 @@ func (k *kafkaClient) CreateTopic(ctx context.Context, topic string) error {
 	return nil
 }
 
+func (k *kafkaClient) DeleteTopic(ctx context.Context, topic string) error {
+	_, err := k.admin.DeleteTopics(ctx, []string{topic})
+	return err
+}
+
 func (k *kafkaClient) Subscribe(topic string) error {
 	if err := k.consumer.Subscribe(topic, nil); err != nil {
 		return err

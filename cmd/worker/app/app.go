@@ -80,6 +80,7 @@ func (a *App) Stop(ctx context.Context) {
 
 	a.srv.Shutdown(ctx)
 	a.db.Close()
+	a.mq.Close()
 }
 
 func (a *App) setupRouter() {

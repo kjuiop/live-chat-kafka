@@ -6,4 +6,6 @@ type Client interface {
 	Subscribe(topic string) error
 	Poll(timeoutMs int) types.Event
 	PublishEvent(topic string, data []byte) (types.Event, error)
+	CreateTopic(topic string) error
+	Close()
 }

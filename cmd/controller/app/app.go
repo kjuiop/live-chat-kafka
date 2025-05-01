@@ -76,6 +76,7 @@ func (a *App) Start(wg *sync.WaitGroup) {
 func (a *App) Stop(ctx context.Context) {
 	a.srv.Shutdown(ctx)
 	a.db.Close()
+	a.mq.Close()
 }
 
 func (a *App) setupRouter() {
@@ -130,7 +131,7 @@ func (a *App) LoopServerInfo(ctx context.Context, wg *sync.WaitGroup) {
 
 func (a *App) initProcess() error {
 
-	if err := a.su.RegisterSubTopic("chat"); err != nil {
+	if err := a.su.SubscribeTopic("chat"); err != nil {
 		return err
 	}
 

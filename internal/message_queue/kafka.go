@@ -1,16 +1,19 @@
 package message_queue
 
 import (
+	"context"
 	"errors"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/message_queue/types"
+	"log/slog"
 )
 
 type kafkaClient struct {
 	cfg      config.Kafka
 	consumer *kafka.Consumer
 	producer *kafka.Producer
+	admin    *kafka.AdminClient
 }
 
 func NewKafkaClient(cfg config.Kafka, withProducer, withConsumer bool) (Client, error) {
@@ -41,11 +44,45 @@ func NewKafkaClient(cfg config.Kafka, withProducer, withConsumer bool) (Client, 
 		}
 	}
 
+	admin, err := kafka.NewAdminClient(&kafka.ConfigMap{
+		"bootstrap.servers": cfg.URL,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &kafkaClient{
 		cfg:      cfg,
 		producer: producer,
 		consumer: consumer,
+		admin:    admin,
 	}, nil
+}
+
+func (k *kafkaClient) CreateTopic(topic string) error {
+
+	metadata, err := k.admin.GetMetadata(&topic, false, 5000)
+	if err != nil {
+		return err
+	}
+
+	if _, exists := metadata.Topics[topic]; exists {
+		return nil
+	}
+
+	_, err = k.admin.CreateTopics(
+		context.Background(),
+		[]kafka.TopicSpecification{{
+			Topic:             topic,
+			NumPartitions:     1,
+			ReplicationFactor: 1,
+		}},
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (k *kafkaClient) Subscribe(topic string) error {
@@ -89,5 +126,17 @@ func (k *kafkaClient) PublishEvent(topic string, data []byte) (types.Event, erro
 		return &types.Error{Error: e}, nil
 	default:
 		return nil, errors.New("unexpected event type")
+	}
+}
+
+func (k *kafkaClient) Close() {
+	k.admin.Close()
+	if k.consumer != nil {
+		if err := k.consumer.Close(); err != nil {
+			slog.Error("failed to close kafka consumer", "error", err)
+		}
+	}
+	if k.producer != nil {
+		k.producer.Close()
 	}
 }

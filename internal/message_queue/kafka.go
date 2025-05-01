@@ -13,37 +13,38 @@ type kafkaClient struct {
 	producer *kafka.Producer
 }
 
-func NewKafkaConsumerClient(cfg config.Kafka) (Client, error) {
+func NewKafkaClient(cfg config.Kafka, withProducer, withConsumer bool) (Client, error) {
 
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": cfg.URL,
-		"group.id":          cfg.GroupID,
-		"auto.offset.reset": "latest",
-	})
-	if err != nil {
-		return nil, err
+	var producer *kafka.Producer
+	var consumer *kafka.Consumer
+	var err error
+
+	if withProducer {
+		producer, err = kafka.NewProducer(&kafka.ConfigMap{
+			"bootstrap.servers": cfg.URL,
+			"client.id":         cfg.ClientID,
+			"acks":              "all",
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &kafkaClient{
-		cfg:      cfg,
-		consumer: consumer,
-	}, nil
-}
-
-func NewKafkaProducerClient(cfg config.Kafka) (Client, error) {
-
-	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": cfg.URL,
-		"client.id":         cfg.ClientID,
-		"acks":              "all",
-	})
-	if err != nil {
-		return nil, err
+	if withConsumer {
+		consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
+			"bootstrap.servers": cfg.URL,
+			"group.id":          cfg.GroupID,
+			"auto.offset.reset": "latest",
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &kafkaClient{
 		cfg:      cfg,
 		producer: producer,
+		consumer: consumer,
 	}, nil
 }
 

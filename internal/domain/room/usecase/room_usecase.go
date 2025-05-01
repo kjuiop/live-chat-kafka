@@ -10,12 +10,14 @@ import (
 type roomUseCase struct {
 	roomRepo       room.Repository
 	contextTimeout time.Duration
+	roomPubSub     room.PubSub
 }
 
-func NewRoomUseCase(roomRepo room.Repository, timeout time.Duration) room.UseCase {
+func NewRoomUseCase(roomRepo room.Repository, timeout time.Duration, roomPubSub room.PubSub) room.UseCase {
 	return &roomUseCase{
 		roomRepo:       roomRepo,
 		contextTimeout: timeout,
+		roomPubSub:     roomPubSub,
 	}
 }
 
@@ -23,7 +25,11 @@ func (r *roomUseCase) CreateChatRoom(c context.Context, room room.RoomInfo) erro
 	ctx, cancel := context.WithTimeout(c, r.contextTimeout)
 	defer cancel()
 
-	return r.roomRepo.Create(ctx, room)
+	if err := r.roomRepo.Create(ctx, room); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *roomUseCase) RegisterRoomId(c context.Context, roomInfo room.RoomInfo) error {

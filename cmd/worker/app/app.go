@@ -8,6 +8,7 @@ import (
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/database"
 	cu "live-chat-kafka/internal/domain/chat/usecase"
+	rps "live-chat-kafka/internal/domain/room/pubsub"
 	rr "live-chat-kafka/internal/domain/room/repository"
 	ru "live-chat-kafka/internal/domain/room/usecase"
 	"live-chat-kafka/internal/domain/system"
@@ -48,7 +49,7 @@ func NewApplication(ctx context.Context) *App {
 		log.Fatalf("fail to init redis err : %v", err)
 	}
 
-	mq, err := message_queue.NewKafkaProducerClient(cfg.Kafka)
+	mq, err := message_queue.NewKafkaClient(cfg.Kafka, true, false)
 	if err != nil {
 		log.Fatalf("fail to create kafka producer err : %v", err)
 	}
@@ -88,12 +89,12 @@ func (a *App) setupRouter() {
 	systemRepo := sr.NewSystemRepository(a.db)
 
 	systemPubSub := sps.NewSystemPubSub(a.cfg.Kafka, a.mq)
+	roomPubSub := rps.NewRoomPubSub(a.cfg.Kafka, a.mq)
 
-	// repository
-	roomRepository := rr.NewRoomRepository(a.db)
+	roomRepo := rr.NewRoomRepository(a.db)
 
 	systemUseCase := su.NewSystemUseCase(systemRepo, systemPubSub)
-	roomUseCase := ru.NewRoomUseCase(roomRepository, timeout)
+	roomUseCase := ru.NewRoomUseCase(roomRepo, timeout, roomPubSub)
 	chatUseCase := cu.NewChatUseCase(roomUseCase, timeout)
 
 	chatController := controller.NewChatController(chatUseCase)

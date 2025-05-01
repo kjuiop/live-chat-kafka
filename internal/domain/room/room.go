@@ -73,3 +73,6 @@ type Repository interface {
 	SetRoomMap(ctx context.Context, data RoomInfo) error
 	GetRoomMap(ctx context.Context, channelKey, broadcastKey string) (*RoomInfo, error)
 }
+
+type PubSub interface {
+}

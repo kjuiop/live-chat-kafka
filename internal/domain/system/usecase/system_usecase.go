@@ -25,11 +25,33 @@ func NewSystemUseCase(systemRepo system.Repository, systemPubSub system.PubSub) 
 		avgServerList: make(map[string]bool),
 	}
 
-	if err := s.getServerInfoForMemory(); err != nil {
-		log.Fatalf("failed get server info, err : %v", err)
+	if err := s.initProcess(); err != nil {
+		log.Fatalf("system usecase init process error: %v", err)
 	}
 
 	return s
+}
+
+func (s *systemUseCase) initProcess() error {
+
+	if err := s.getServerInfoForMemory(); err != nil {
+		return fmt.Errorf("get server info for memory error: %w", err)
+	}
+
+	if err := s.createChatServerTopic(); err != nil {
+		return fmt.Errorf("create chat server topic error: %w", err)
+	}
+
+	return nil
+}
+
+func (s *systemUseCase) createChatServerTopic() error {
+
+	if err := s.systemPubSub.CreateChatServerTopic(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *systemUseCase) GetServerList() ([]system.ServerInfo, error) {
@@ -122,8 +144,8 @@ func (s *systemUseCase) SetChatServerInfo(ip string, available bool) error {
 	return nil
 }
 
-func (s *systemUseCase) RegisterSubTopic(topic string) error {
-	return s.systemPubSub.RegisterSubTopic(topic)
+func (s *systemUseCase) SubscribeTopic(topic string) error {
+	return s.systemPubSub.SubscribeTopic(topic)
 }
 
 func (s *systemUseCase) PublishServerStatusEvent(addr string, status bool) {

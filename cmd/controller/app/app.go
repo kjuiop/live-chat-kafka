@@ -6,6 +6,7 @@ import (
 	"live-chat-kafka/api/route"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/database"
+	rps "live-chat-kafka/internal/domain/room/pubsub"
 	rr "live-chat-kafka/internal/domain/room/repository"
 	ru "live-chat-kafka/internal/domain/room/usecase"
 	"live-chat-kafka/internal/domain/system"
@@ -45,7 +46,7 @@ func NewApplication(ctx context.Context) *App {
 		log.Fatalf("fail to init redis err : %v", err)
 	}
 
-	mq, err := message_queue.NewKafkaConsumerClient(cfg.Kafka)
+	mq, err := message_queue.NewKafkaClient(cfg.Kafka, false, true)
 	if err != nil {
 		log.Fatalf("fail to connect kafka client")
 	}
@@ -75,6 +76,7 @@ func (a *App) Start(wg *sync.WaitGroup) {
 func (a *App) Stop(ctx context.Context) {
 	a.srv.Shutdown(ctx)
 	a.db.Close()
+	a.mq.Close()
 }
 
 func (a *App) setupRouter() {
@@ -85,9 +87,10 @@ func (a *App) setupRouter() {
 	roomRepo := rr.NewRoomRepository(a.db)
 
 	systemPubSub := sps.NewSystemPubSub(a.cfg.Kafka, a.mq)
+	roomPubSub := rps.NewRoomPubSub(a.cfg.Kafka, a.mq)
 
 	systemUseCase := su.NewSystemUseCase(systemRepo, systemPubSub)
-	roomUseCase := ru.NewRoomUseCase(roomRepo, timeout)
+	roomUseCase := ru.NewRoomUseCase(roomRepo, timeout, roomPubSub)
 
 	systemController := controller.NewSystemController(systemUseCase)
 	roomController := controller.NewRoomController(a.cfg.Policy, roomUseCase)
@@ -128,7 +131,7 @@ func (a *App) LoopServerInfo(ctx context.Context, wg *sync.WaitGroup) {
 
 func (a *App) initProcess() error {
 
-	if err := a.su.RegisterSubTopic("chat"); err != nil {
+	if err := a.su.SubscribeTopic("chat"); err != nil {
 		return err
 	}
 

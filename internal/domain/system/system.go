@@ -24,7 +24,7 @@ func (s *ServerInfo) ConvertRedisData() map[string]interface{} {
 type UseCase interface {
 	GetServerList() ([]ServerInfo, error)
 	LoopSubKafka(timeoutMs int) (*types.Message, error)
-	RegisterSubTopic(topic string) error
+	SubscribeTopic(topic string) error
 	SetChatServerInfo(ip string, available bool) error
 	PublishServerStatusEvent(addr string, status bool)
 }
@@ -35,7 +35,8 @@ type Repository interface {
 }
 
 type PubSub interface {
-	RegisterSubTopic(topic string) error
+	SubscribeTopic(topic string) error
 	Poll(timeoutMs int) types.Event
 	PublishEvent(topic string, data []byte) (types.Event, error)
+	CreateChatServerTopic() error
 }

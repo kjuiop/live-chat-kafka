@@ -59,7 +59,7 @@ func NewKafkaClient(cfg config.Kafka, withProducer, withConsumer bool) (Client, 
 	}, nil
 }
 
-func (k *kafkaClient) CreateTopic(topic string) error {
+func (k *kafkaClient) CreateTopic(ctx context.Context, topic string) error {
 
 	metadata, err := k.admin.GetMetadata(&topic, false, 5000)
 	if err != nil {
@@ -71,7 +71,7 @@ func (k *kafkaClient) CreateTopic(topic string) error {
 	}
 
 	_, err = k.admin.CreateTopics(
-		context.Background(),
+		ctx,
 		[]kafka.TopicSpecification{{
 			Topic:             topic,
 			NumPartitions:     1,

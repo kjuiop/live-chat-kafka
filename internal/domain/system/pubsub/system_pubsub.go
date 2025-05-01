@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"context"
 	"live-chat-kafka/config"
 	"live-chat-kafka/internal/domain/system"
 	"live-chat-kafka/internal/message_queue"
@@ -25,7 +26,7 @@ func NewSystemPubSub(cfg config.Kafka, mq message_queue.Client) system.PubSub {
 
 func (p *PubSub) CreateChatServerTopic() error {
 
-	if err := p.mq.CreateTopic(serverTopic); err != nil {
+	if err := p.mq.CreateTopic(context.Background(), serverTopic); err != nil {
 		return err
 	}
 

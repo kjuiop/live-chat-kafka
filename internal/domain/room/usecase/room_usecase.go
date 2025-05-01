@@ -29,6 +29,10 @@ func (r *roomUseCase) CreateChatRoom(c context.Context, room room.RoomInfo) erro
 		return err
 	}
 
+	if err := r.roomPubSub.CreateChatRoom(c, room.RoomId); err != nil {
+		return err
+	}
+
 	return nil
 }
 

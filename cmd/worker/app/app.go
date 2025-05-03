@@ -50,7 +50,7 @@ func NewApplication(ctx context.Context) *App {
 		log.Fatalf("fail to init redis err : %v", err)
 	}
 
-	mq, err := message_queue.NewKafkaClient(cfg.Kafka, true, false)
+	mq, err := message_queue.NewKafkaClient(cfg.Kafka, true, true)
 	if err != nil {
 		log.Fatalf("fail to create kafka producer err : %v", err)
 	}

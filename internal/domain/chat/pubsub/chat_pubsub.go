@@ -54,9 +54,6 @@ func (c *chatPubSub) SubscribeTopic(ctx context.Context, topic string, handler f
 			select {
 			case <-ctx.Done():
 				slog.Debug("close Loop SubscribeTopic goroutine")
-				c.mu.Lock()
-				delete(c.subscribed, topic)
-				c.mu.Unlock()
 				return
 			default:
 				ev := c.mq.Poll(100) // 100ms 동안 폴링

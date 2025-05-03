@@ -74,7 +74,7 @@ func (cc *ChatController) ServeWS(c *gin.Context) {
 		return
 	}
 
-	if err := cc.ChatUseCase.ServeWs(c, socket, chatRoom, userId); err != nil {
+	if err := cc.ChatUseCase.ServeWsByMemory(c, socket, chatRoom, userId); err != nil {
 		logger.Error("failed to serve websocket", "roomId", roomId, "userId", userId, "err", err)
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gorilla/websocket"
 	"live-chat-kafka/internal/domain/chat/types"
+	"live-chat-kafka/internal/message_queue"
 	"log/slog"
 	"time"
 )
@@ -13,16 +14,20 @@ type Client struct {
 	Room     *Room
 	UserID   string
 	Socket   *websocket.Conn
+	mq       message_queue.Client
 	isClosed bool
 }
 
 func NewClient(socket *websocket.Conn, r *Room, clientId string) *Client {
-	return &Client{
+
+	client := &Client{
 		Socket: socket,
 		Send:   make(chan *Message, types.MessageBufferSize),
 		Room:   r,
 		UserID: clientId,
 	}
+
+	return client
 }
 
 func (c *Client) Write(ctx context.Context) {
@@ -80,7 +85,9 @@ ReadLoop:
 			msg.Time = time.Now().Unix()
 			msg.SendUserId = c.UserID
 
-			c.Room.Forward <- msg
+			if err := c.Room.chatPubSub.PublishMessage(c.Room.RoomId, msg); err != nil {
+				slog.Error("failed to publish chat message", "room_id", c.Room.RoomId, "user_id", c.UserID, "err", err)
+			}
 		}
 	}
 }

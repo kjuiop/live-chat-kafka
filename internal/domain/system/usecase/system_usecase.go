@@ -162,5 +162,5 @@ func (s *systemUseCase) PublishServerStatusEvent(addr string, status bool) {
 		log.Fatalf("failed publish server info, addr : %s, err : %v", addr, err.Error())
 	}
 
-	slog.Debug("success server info publish event, %v", event)
+	slog.Debug("success server info publish", "event", event)
 }

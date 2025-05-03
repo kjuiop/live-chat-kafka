@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"context"
 	"live-chat-kafka/internal/domain/room"
 	"log/slog"
 )
@@ -15,20 +16,29 @@ type Room struct {
 	Join  chan *Client // Socket 이 연결되는 경우에 적용
 	Leave chan *Client // Socket 이 끊어지는 경우에 대해서 적용
 
-	Clients map[*Client]bool // 현재 방에 있는 Client 정보를 저장
+	Clients    map[*Client]bool // 현재 방에 있는 Client 정보를 저장
+	chatPubSub PubSub
 }
 
-func NewChatRoom(roomInfo *room.RoomInfo) *Room {
+func NewChatRoom(ctx context.Context, roomInfo *room.RoomInfo, chatPubSub PubSub) (*Room, error) {
 	chatRoom := &Room{
-		RoomId:  roomInfo.RoomId,
-		Alive:   true,
-		Forward: make(chan *Message),
-		Join:    make(chan *Client),
-		Leave:   make(chan *Client),
-		Clients: make(map[*Client]bool),
+		RoomId:     roomInfo.RoomId,
+		Alive:      true,
+		Forward:    make(chan *Message),
+		Join:       make(chan *Client),
+		Leave:      make(chan *Client),
+		Clients:    make(map[*Client]bool),
+		chatPubSub: chatPubSub,
 	}
+
+	if err := chatPubSub.SubscribeTopic(ctx, chatRoom.RoomId, func(msg *Message) {
+		chatRoom.Forward <- msg
+	}); err != nil {
+		return nil, err
+	}
+
 	go chatRoom.chatInit()
-	return chatRoom
+	return chatRoom, nil
 }
 
 func (r *Room) chatInit() {

@@ -131,7 +131,7 @@ func (a *App) LoopServerInfo(ctx context.Context, wg *sync.WaitGroup) {
 
 func (a *App) initProcess() error {
 
-	if err := a.su.SubscribeTopic("chat"); err != nil {
+	if err := a.su.SubscribeTopic("live-chat-server-info"); err != nil {
 		return err
 	}
 

@@ -19,9 +19,10 @@ type chatUseCase struct {
 	contextTimeout time.Duration
 	hub            map[string]*chat.Room
 	upgrader       *websocket.Upgrader
+	chatPubSub     chat.PubSub
 }
 
-func NewChatUseCase(roomUseCase room.UseCase, timeout time.Duration) chat.UseCase {
+func NewChatUseCase(roomUseCase room.UseCase, timeout time.Duration, chatPubSub chat.PubSub) chat.UseCase {
 	return &chatUseCase{
 		roomUseCase:    roomUseCase,
 		contextTimeout: timeout,
@@ -33,10 +34,27 @@ func NewChatUseCase(roomUseCase room.UseCase, timeout time.Duration) chat.UseCas
 				return true
 			},
 		},
+		chatPubSub: chatPubSub,
 	}
 }
 
 func (cu *chatUseCase) ServeWs(ctx context.Context, socket *websocket.Conn, chatRoom *chat.Room, userId string) error {
+
+	client := chat.NewClient(socket, chatRoom, userId)
+
+	chatRoom.Join <- client
+	defer func() {
+		chatRoom.Leave <- client
+	}()
+
+	go client.Write(ctx)
+
+	client.Read(ctx)
+
+	return nil
+}
+
+func (cu *chatUseCase) ServeWsByMemory(ctx context.Context, socket *websocket.Conn, chatRoom *chat.Room, userId string) error {
 
 	client := chat.NewClient(socket, chatRoom, userId)
 
@@ -63,7 +81,13 @@ func (cu *chatUseCase) GetChatRoom(ctx context.Context, roomId string) (*chat.Ro
 		if err != nil {
 			return nil, fmt.Errorf("not found chat room, key : %s, err : %w", roomId, err)
 		}
-		cu.hub[roomId] = chat.NewChatRoom(roomInfo)
+
+		chatRoom, err := chat.NewChatRoom(ctx, roomInfo, cu.chatPubSub)
+		if err != nil {
+			return nil, fmt.Errorf("not found chat room, key : %s, err : %w", roomId, err)
+		}
+
+		cu.hub[roomId] = chatRoom
 	}
 
 	return cu.hub[roomId], nil

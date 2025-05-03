@@ -7,12 +7,14 @@
 
 ## 🧩 시스템 구성
 
-![image](https://github.com/user-attachments/assets/b64af16b-e320-49c9-8187-6cadc1b12c3c)
-
+![image](https://github.com/user-attachments/assets/44689192-f005-407d-9cd3-d9f52440683e)
 
 - 사용자는 HTTP API를 통해 채팅방을 생성하거나 삭제할 수 있습니다.
-- 채팅방에 입장한 사용자는 WebSocket을 통해 실시간으로 메시지를 주고받을 수 있습니다.
-- 서버는 Redis를 사용하여 메시지 브로커 역할을 수행하며, 채팅 메시지를 효율적으로 관리합니다.
+- 채팅방이 생성될 때에 Kafka 의 Topic 도 생성됩니다.
+- 채팅방에 사용자가 입장하게 되면 Kafka 에 등록된 채팅방을 Subscribe 하게 됩니다.
+- 서버가 사용자로부터 WebSocket 메시를 받으면 이를 Kafka 브로커에 Publish 합니다.
+- Kafka 로부터 메시지를 서버가 전달받게 되면 서버와 연결된 접속자들에게 메시지를 전달합니다.
+
 
 ## ⚙️ 기술 스택
 
